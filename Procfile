@@ -1,0 +1,1 @@
+web: gunicorn laundry_app.wsgi --log-file - --log-level info

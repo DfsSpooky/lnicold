@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Pedido #{{ order.order_code|default:order.id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap');
+        body { font-family: 'Inconsolata', monospace; width: 302px; margin: 0 auto; color: #000; }
+        .ticket { background: #fff; padding: 15px; }
+        .header, .footer { text-align: center; }
+        .header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .info { font-size: 0.8rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+        .item-table { width: 100%; font-size: 0.8rem; border-collapse: collapse; }
+        .item-table th, .item-table td { padding: 4px 0; }
+        .item-table .item { text-align: left; }
+        .item-table .price { text-align: right; }
+        .totals { margin-top: 10px; font-size: 0.9rem; border-top: 1px solid #000; padding-top: 5px; }
+        .totals .row .label { text-align: left; }
+        .totals .row .value { text-align: right; font-weight: bold; }
+        
+        /* --- ESTILOS AÑADIDOS PARA EL ESTADO DEL PAGO --- */
+        .payment-status-box {
+            margin-top: 15px;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .status-paid {
+            background-color: #d1fae5; /* Verde claro */
+            color: #065f46; /* Verde oscuro */
+            border: 1px solid #6ee7b7;
+        }
+        .status-due {
+            background-color: #fee2e2; /* Rojo claro */
+            color: #991b1b; /* Rojo oscuro */
+            border: 1px solid #fca5a5;
+        }
+        /* --- FIN DE ESTILOS AÑADIDOS --- */
+
+        .qr-code { margin-top: 15px; }
+        .print-button { width: 100%; padding: 10px; background-color: #4a4a4a; color: white; border: none; margin-top: 20px; cursor: pointer; font-weight: bold; }
+        @media print { .no-print { display: none; } body { margin: 0; } }
+    </style>
+</head>
+<body class="bg-gray-200">
+
+    <div class="ticket">
+        <header class="header">
+            <h2>{{ app_config.business_name|default:'Mi Lavandería' }}</h2>
+            <p class="text-xs">{{ app_config.business_address|default:'Dirección no configurada' }}</p>
+            <p class="text-xs">Tel: {{ app_config.business_phone|default:'Sin teléfono' }}</p>
+        </header>
+
+        <section class="info">
+            <p><strong>Pedido:</strong> #{{ order.order_code|default:order.id }}</p>
+            <p><strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+            <div>
+                <p><strong>Cliente:</strong> {{ order.customer.name }}</p>
+                <p><strong>Código Cliente:</strong> {{ order.customer.customer_code }}</p>
+            </div>
+        </section>
+
+        <section>
+            <table class="item-table">
+                <thead><tr><th class="item">Descripción</th><th class="price">Monto</th></tr></thead>
+                <tbody>
+                    {% if order.weight and order.weight > 0 %}
+                    <tr><td class="item">Lavado por Peso ({{ order.weight }} kg)</td><td class="price">S/ {{ order.weight_total_price|floatformat:2 }}</td></tr>
+                    {% endif %}
+                    {% for item in order.ordercategory_set.all %}
+                    <tr><td class="item">{{ item.category.name }} (x{{ item.quantity }})</td><td class="price">S/ {{ item.price|floatformat:2 }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="totals">
+            <div class="flex justify-between row text-lg mt-2 pt-2 border-t border-dashed"><span class="label">TOTAL:</span><span class="value">S/ {{ order.total_price|floatformat:2 }}</span></div>
+            {% if order.partial_amount > 0 %}<div class="flex justify-between row"><span class="label">Adelanto ({{ order.get_payment_method_display }}):</span><span class="value">- S/ {{ order.partial_amount|floatformat:2 }}</span></div>{% endif %}
+            
+            {% if order.remaining_amount <= 0 %}
+                <div class="payment-status-box status-paid">
+                    CANCELADO
+                </div>
+            {% else %}
+                <div class="payment-status-box status-due">
+                    DEBE: S/ {{ order.remaining_amount|floatformat:2 }}
+                </div>
+            {% endif %}
+            </section>
+
+        <footer class="footer">
+            <p class="text-xs mt-4">¡Gracias por su preferencia!</p>
+            <div class="qr-code">
+                <p class="text-xs mb-2">Consulte el estado de su pedido:</p>
+                <img src="{{ order.qr_code.url }}" alt="Código QR del Pedido" class="mx-auto" style="width: 120px; height: 120px;">
+            </div>
+        </footer>
+    </div>
+    
+    <div class="text-center no-print mt-4">
+        <button onclick="window.print()" class="print-button"><i class="fas fa-print mr-2"></i>IMPRIMIR TICKET</button>
+        {% if whatsapp_link %}
+            <a href="{{ whatsapp_link }}" target="_blank" class="block w-full bg-green-500 text-white p-3 no-underline font-bold mt-2"><i class="fab fa-whatsapp mr-2"></i>Enviar por WhatsApp</a>
+        {% endif %}
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Listado de Gastos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-wrap justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Listado de Gastos</h1>
+            <p class="text-slate-500 mt-1">Aquí puedes ver todos los egresos de tu negocio.</p>
+        </div>
+        <a href="{% url 'add_expense' %}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 flex items-center shadow-sm font-semibold">
+            <i class="fas fa-plus mr-2"></i> Registrar Nuevo Gasto
+        </a>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500">
+        <h3 class="text-sm font-medium text-slate-500">Gasto Total Registrado</h3>
+        <p class="mt-2 text-3xl font-bold text-slate-800">S/ {{ total_expenses|floatformat:2 }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-slate-500">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Fecha</th>
+                        <th scope="col" class="px-6 py-3">Descripción</th>
+                        <th scope="col" class="px-6 py-3">Categoría</th>
+                        <th scope="col" class="px-6 py-3 text-right">Monto (S/)</th>
+                        <th scope="col" class="px-6 py-3 text-center">Comprobante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr class="bg-white border-b hover:bg-slate-50">
+                        <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">{{ expense.expense_date|date:"d M, Y" }}</td>
+                        <td class="px-6 py-4">{{ expense.description }}</td>
+                        <td class="px-6 py-4">{{ expense.get_category_display }}</td>
+                        <td class="px-6 py-4 text-right font-semibold text-red-600">S/ {{ expense.amount|floatformat:2 }}</td>
+                        <td class="px-6 py-4 text-center">
+                            {% if expense.receipt %}
+                                <a href="{{ expense.receipt.url }}" target="_blank" class="text-blue-600 hover:underline">
+                                    <i class="fas fa-file-alt"></i> Ver
+                                </a>
+                            {% else %}
+                                <span class="text-slate-400">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-10 text-slate-500">
+                            <p class="font-semibold">Aún no has registrado ningún gasto.</p>
+                            <p class="text-sm">¡Empieza ahora haciendo clic en "Registrar Nuevo Gasto"!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
