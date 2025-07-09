@@ -1,13 +1,27 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv # Asegúrate de que esta importación esté
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'your-secret-key'  # Cambia esto por una clave segura
+# --- ¡ESTA LÍNEA ES CRUCIAL Y DEBE ESTAR AQUÍ ARRIBA! ---
+# Carga las variables de entorno.
+load_dotenv()
 
-DEBUG = True
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-ALLOWED_HOSTS = []
+# SECURITY WARNING: keep the secret key used in production secret!
+# Lee la SECRET_KEY desde las variables de entorno
+SECRET_KEY = os.getenv('SECRET_KEY')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+# Lee DEBUG desde las variables de entorno (convierte el texto 'True' a un booleano)
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+# Lee ALLOWED_HOSTS desde las variables de entorno y lo convierte en una lista
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
